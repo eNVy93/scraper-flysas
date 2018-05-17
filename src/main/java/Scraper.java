@@ -44,10 +44,17 @@ public class Scraper {
             String arrAir = mainDataRow.select("td.airport.last > acronym:nth-child(3) > span").text();
 
             String departureAirport = detailsRow.select("table > tbody > tr:nth-child(2) > td.route.last > span:nth-child(1) > span.location").text();
-
+            String connectionAirport = detailsRow.select("table > tbody > tr:nth-child(2) > td.route.last > span:nth-child(3) > span.location").text();
             String arrivalAirport = detailsRow.select("table > tbody > tr:nth-child(5) > td.route.last > span:nth-child(3) > span.location").text();
-            String connectionAirport = detailsRow.select("table > tbody > tr:nth-child(2) > td.route.last > span:nth-child(3) > span").text();
-            if (connectionAirport.contains("London")) {
+            // table 1
+            // #toggleId_0_15 > table > tbody > tr:nth-child(2) > td.route.last > span:nth-child(1) > span.location ----- departure     STOCKHOLM
+            // #toggleId_0_15 > table > tbody > tr:nth-child(2) > td.route.last > span:nth-child(3) > span    ----- connection          OSLO
+            // #toggleId_0_15 > table > tbody > tr:nth-child(5) > td.route.last > span:nth-child(3) > span.location ----- arrival       LONDON
+            // table 2
+            // #toggleId_1_11 > table > tbody > tr:nth-child(2) > td.route.last > span:nth-child(1) > span.location ----- departure     LONDON
+            // #toggleId_1_11 > table > tbody > tr:nth-child(2) > td.route.last > span:nth-child(3) > span.location ----- connection    SOME OTHER
+            // #toggleId_1_11 > table > tbody > tr:nth-child(5) > td.route.last > span:nth-child(3) > span.location ----- arrival       STOCKHOLM
+            if (connectionAirport.contains("London") || connectionAirport.contains("Stockholm")) {
                 arrivalAirport = connectionAirport;
                 connectionAirport = "";
             }
