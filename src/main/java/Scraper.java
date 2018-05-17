@@ -1,241 +1,186 @@
-import com.gargoylesoftware.htmlunit.*;
-import com.gargoylesoftware.htmlunit.html.*;
-import com.gargoylesoftware.htmlunit.javascript.host.event.Event;
-import com.gargoylesoftware.htmlunit.util.Cookie;
-import com.gargoylesoftware.htmlunit.util.NameValuePair;
-import org.w3c.dom.ranges.Range;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 
 public class Scraper {
-    private static final WebClient webClient = new WebClient(BrowserVersion.INTERNET_EXPLORER);
 
-    public WebClient setUpWebClient() throws IOException {
-
-        // Turn off warnings
-        java.util.logging.Logger.getLogger("com.gargoylesoftware.htmlunit").setLevel(Level.OFF);
-        java.util.logging.Logger.getLogger("org.apache.http").setLevel(java.util.logging.Level.OFF);
-        System.setProperty("http.proxyHost", "127.0.0.1");
-        System.setProperty("https.proxyHost", "127.0.0.1");
-        System.setProperty("http.proxyPort", "8888");
-        System.setProperty("https.proxyPort", "8888");
-        webClient.getOptions().setJavaScriptEnabled(true);
-        webClient.waitForBackgroundJavaScript(5000);
-        webClient.getOptions().setThrowExceptionOnScriptError(false);
-        webClient.getOptions().setRedirectEnabled(true);
-        setCookies(webClient);
-
-        return webClient;
-    }
-
-    private void setCookies(WebClient client) {
-        CookieManager cookieManager = client.getCookieManager();
-        String domain = "www.flysas.com";
-        String name = "SASLastSearch";
-        String value = "%7B%22origin%22:%22ARN%22,%22destination%22:%22LHR%22,%22outward%22:%2220180604%22,%22inward%22:%2220180610%22,%22adults%22:%221%22,%22children%22:%220%22,%22infants%22:%220%22,%22youths%22:%22NaN%22,%22lpc%22:%22false%22,%22oneway%22:%22false%22,%22rtf%22:%22false%22,%22rcity%22:%22false%22%7D";
-        Cookie lastSearch = new Cookie(domain, name, value);
-        cookieManager.addCookie(lastSearch);
+    //TODO
+    public Elements getDepartureTable(Document doc) {
+        return doc.select("#WDSEffect_table_0 > tbody");
 
     }
 
-    // TODO set the input value to 'departureAirport'
-    public HtmlPage clickSearchButton(HtmlPage page) throws IOException {
-        String buttonId = "ctl00_FullRegion_MainRegion_ContentRegion_ContentFullRegion_ContentLeftRegion_CEPGroup1_CEPActive_cepNDPRevBookingArea_Searchbtn_ButtonLink";
-        String anchorHref = "javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions(\"ctl00$FullRegion$MainRegion$ContentRegion$ContentFullRegion$ContentLeftRegion$CEPGroup1$CEPActive$cepNDPRevBookingArea$Searchbtn$ButtonLink\", \"\", true, \"\", \"\", false, true))";
-        DomElement buttonElement = page.getElementById(buttonId);
-        HtmlAnchor submitAnchor = page.getAnchorByHref(anchorHref);
+    //TODO
+    public Elements getArrivalTable(Document doc) {
+        return doc.select("#WDSEffect_table_1 > tbody");
 
-
-        return submitAnchor.click();
     }
 
-    public void saveHtmlFile(HtmlPage page) throws FileNotFoundException {
+    public void iterateOverRows(Elements els) {
 
-        String filename = "OutputHTML";
-        String extension = ".html";
-        int counter = 1;
-        File outputFile = new File("C:\\Users\\nevyt\\IdeaProjects\\scraper-flysas\\src\\" + filename + extension);
-        PrintWriter writer;
-        if (outputFile.exists()) {
-            outputFile = new File("C:\\Users\\nevyt\\IdeaProjects\\scraper-flysas\\src\\" + filename + counter + extension);
-            writer = new PrintWriter(outputFile);
-            writer.write(page.asXml());
-            writer.close();
-        } else {
-            writer = new PrintWriter(outputFile);
-            writer.write(page.asXml());
-            writer.close();
+        Elements rows = els.select("tr");
+        int rowCounter = 0;
+        for (Element row : rows) {
+            System.out.println("Row " + rowCounter);
+            Elements cols = row.select("td");
+            int colCounter = 0;
+            for (Element col : cols) {
+//                System.out.println("\nCol " + colCounter + " : " + col.text() );
+                System.out.println(col.getElementsByAttribute("data-price"));
+                System.out.println(col.getElementsByClass("time"));
+                colCounter++;
+            }
+            rowCounter++;
         }
+    }
+
+    // take one row, map all cols of the row
+    public void getData(Elements elements) {
+        Elements rows = elements.select("tr");
+        Elements cols = rows.select("td");
+//        System.out.println(cols.select("[id^=price]"));
+//        System.out.println(cols.select("[class=time]"));
 
     }
 
-    public HtmlPage setInterestPointValues(HtmlPage page) {
-        String buttonId = "ctl00_FullRegion_MainRegion_ContentRegion_ContentFullRegion_ContentLeftRegion_CEPGroup1_CEPActive_cepNDPRevBookingArea_Searchbtn_ButtonLink";
-        String fromId = "ctl00_FullRegion_MainRegion_ContentRegion_ContentFullRegion_ContentLeftRegion_CEPGroup1_CEPActive_cepNDPRevBookingArea_predictiveSearch_hiddenFrom";
-        String toId = "ctl00_FullRegion_MainRegion_ContentRegion_ContentFullRegion_ContentLeftRegion_CEPGroup1_CEPActive_cepNDPRevBookingArea_predictiveSearch_hiddenTo";
-        String adultId = "ctl00_FullRegion_MainRegion_ContentRegion_ContentFullRegion_ContentLeftRegion_CEPGroup1_CEPActive_cepNDPRevBookingArea_cepPassengerTypes_passengerTypeAdult";
-        String childId = "ctl00_FullRegion_MainRegion_ContentRegion_ContentFullRegion_ContentLeftRegion_CEPGroup1_CEPActive_cepNDPRevBookingArea_cepPassengerTypes_passengerTypeChild211";
-        String infantId = "ctl00_FullRegion_MainRegion_ContentRegion_ContentFullRegion_ContentLeftRegion_CEPGroup1_CEPActive_cepNDPRevBookingArea_cepPassengerTypes_passengerTypeInfant";
-        String outboundId = "ctl00_FullRegion_MainRegion_ContentRegion_ContentFullRegion_ContentLeftRegion_CEPGroup1_CEPActive_cepNDPRevBookingArea_cepCalendar_hiddenOutbound";
-        String returnId = "ctl00_FullRegion_MainRegion_ContentRegion_ContentFullRegion_ContentLeftRegion_CEPGroup1_CEPActive_cepNDPRevBookingArea_cepCalendar_hiddenReturn";
+    public List<FlightData> getFlightDataRefactored(Elements elements) {
+        List<FlightData> flightList = new ArrayList<FlightData>();
+        Elements rows = elements.select("tr");
+        for (int i = 0; i < 18; i++) {
+            Elements mainDataRow = rows.select("#idLine_0_" + i);
+            Elements detailsRow = elements.select("#toggleId_0_" + i);
 
-        HtmlAnchor submitButton = (HtmlAnchor) page.getElementById(buttonId);
-        HtmlHiddenInput departureAir = (HtmlHiddenInput) page.getElementById(fromId);
-        HtmlHiddenInput arrivalAir = (HtmlHiddenInput) page.getElementById(toId);
-        HtmlSelect adultCount = (HtmlSelect) page.getElementById(adultId);
-        HtmlSelect childCount = (HtmlSelect) page.getElementById(childId);
-        HtmlSelect infantCount = (HtmlSelect) page.getElementById(infantId);
-        HtmlHiddenInput outbound = (HtmlHiddenInput) page.getElementById(outboundId);
-        HtmlHiddenInput ret = (HtmlHiddenInput) page.getElementById(returnId);
+            String[] flightType = generateFlightClassNameList();
 
-        //set values
-        departureAir.setValueAttribute("ARN");
-        arrivalAir.setValueAttribute("LHR");
-        adultCount.getOptionByValue("1");
-        childCount.getOptionByValue("0");
-        infantCount.getOptionByValue("0");
-        outbound.setValueAttribute("2018-06-04");
-        ret.setValueAttribute("2018-06-10");
+            String goLightFlight = mainDataRow.select("#reco_0_" + i + flightType[0]).text();
+            String sasGoFlight = mainDataRow.select("#reco_0_" + i + flightType[1]).text();
+            String plusSaverFlight = mainDataRow.select("#reco_0_" + i + flightType[2]).text();
+            String plusFlight = mainDataRow.select("#reco_0_" + i + flightType[3]).text();
 
-//      FOR OUTPUT DEBUGGING
-//        System.out.println(
-//                "Button: " + submitButton.toString()
-//                        + "\nDeparture: " + departureAir.toString()
-//                        + "\nArrival: " + arrivalAir.toString()
-//                        + "\nAdultCount: " + adultCount.toString()
-//                        + "\nChildCount: " + childCount.toString()
-//                        + "\nInfantCount: " + infantCount.toString()
-//                        + "\nDeparture date: " + outbound.toString()
-//                        + "\nArrival date: " + ret.toString()
-//        );
-        return page;
+            String depTime = mainDataRow.select("td.time > span:nth-child(1)").text();
+            String arrTime = mainDataRow.select("td.time > span:nth-child(3)").text();
 
-    }
+            String depAir = mainDataRow.select("td.airport.last > acronym:nth-child(1) > span").text();
+            String arrAir = mainDataRow.select("td.airport.last > acronym:nth-child(3) > span").text();
 
-    public HtmlPage submitForm(HtmlPage page) {
-        HtmlForm form = page.getForms().get(0);
-        page = (HtmlPage) form.fireEvent(Event.TYPE_SUBMIT).getNewPage();
-        // new bullshit
-        return page;
-    }
+            String departureAirport = detailsRow.select("table > tbody > tr:nth-child(2) > td.route.last > span:nth-child(1) > span.location").text();
+            // if connection exists
+            // TODO think of a flow controll for connection airport. If the flight is direct, there is no connection airport(empty) .
+            //TODO also if connection airport is not Oslo -> discard.
+            String arrivalAirport = detailsRow.select("table > tbody > tr:nth-child(5) > td.route.last > span:nth-child(3) > span.location").text();
+            String connectionAirport = detailsRow.select("table > tbody > tr:nth-child(2) > td.route.last > span:nth-child(3) > span").text();
+            if(connectionAirport.contains("London")){
+                arrivalAirport = connectionAirport;
+                connectionAirport = "";
+            }
+//            String noConnectionSelector = "table > tbody > tr.flight > td.route.last > span:nth-child(3) > span.location";
 
-    public List<HtmlPage> savePagesFromWindows(WebClient webClient) {
-        List<HtmlPage> pageList = new ArrayList<HtmlPage>();
-        List<WebWindow> windowCount = webClient.getWebWindows();
-        for (WebWindow window :
-                windowCount) {
-            pageList.add(((HtmlPage) window.getEnclosedPage()));
-            System.out.println("Window url: " + window.getEnclosedPage().getUrl().toExternalForm());
-//            System.out.println("DATA " + ((HtmlPage) window.getEnclosedPage()).asXml());
+            String[] flightPrices = {goLightFlight,sasGoFlight,plusSaverFlight,plusFlight};
+
+            if(connectionAirport.length()!=0 && !connectionAirport.contains("Oslo")){
+
+                //do nothing
+            } else {
+                flightList.add(new FlightData(flightPrices,departureAirport,arrivalAirport,connectionAirport,depTime,arrTime));
+            }
+
         }
-        return pageList;
-    }
+        return flightList;
 
-    public HtmlTable getTargetTable(HtmlPage page){
-        return (HtmlTable) page.getElementById("WDSEffect_table_0");
-    }
-
-    //DOES NOTHING
-
-    public void setDepartureInput(HtmlPage page, String departureAirport) {
-        String idFrom = "ctl00_FullRegion_MainRegion_ContentRegion_ContentFullRegion_ContentLeftRegion_CEPGroup1_CEPActive_cepNDPRevBookingArea_predictiveSearch_hiddenFrom";
-
-        DomElement departureInputElement = page.getElementById(idFrom);
-        departureInputElement.setAttribute("value", departureAirport);
-        System.out.println(departureInputElement.toString());
-        System.out.println(departureInputElement.getAttribute("value"));
 
     }
 
-    public void setArrivalInput(HtmlPage page, String arrivalAirport) {
-        String idFrom = "ctl00_FullRegion_MainRegion_ContentRegion_ContentFullRegion_ContentLeftRegion_CEPGroup1_CEPActive_cepNDPRevBookingArea_predictiveSearch_hiddenTo";
-
-        DomElement arrivalInputElement = page.getElementById(idFrom);
-        arrivalInputElement.setAttribute("value", arrivalAirport);
-        System.out.println(arrivalInputElement.toString());
-        System.out.println(arrivalInputElement.getAttribute("value"));
-
-    }
-
-    public void getPageInfo(HtmlPage page) {
-        URL baseUrl = page.getBaseURL();
-        String titleText = page.getTitleText();
-        String contentType = page.getContentType();
-        List<HtmlForm> forms = page.getForms();
-        List<Range> selectionRanges = page.getSelectionRanges();
-        List<NameValuePair> responseHeaders = page.getWebResponse().getResponseHeaders();
-
-        System.out.println(
-                "Base URL " + baseUrl.toExternalForm()
-                        + "\nTitle text: " + titleText
-                        + "\nContent-type: " + contentType
-        );
-
-//        for (HtmlForm form :
-//                forms) {
-//            System.out.println("Form : " + form.asXml());
+    //REFACTOR
+    public FlightData getFlightData(Elements elements) {
+        Elements rows = elements.select("tr");
+//        for(int i=0;i<19;i++){
+//            Elements mainDataRow = rows.select("#idLine_0_"+i);
+//            Elements detailsRow = elements.select("#toggleId_0_"+i);
+//            System.out.println(mainDataRow.text());
+//            System.out.println(detailsRow.text());
+//
 //        }
-        System.out.println("Form count: " + forms.size());
-        for (Range range : selectionRanges) {
-            System.out.println("Range: " + range.toString());
-        }
+        Elements mainDataRow = rows.select("#idLine_0_1");
+        Elements detailsRow = elements.select("#toggleId_0_1");
+        String[] flightType = generateFlightClassNameList();
+        // working with first data row
+        // get all four prices for four flight types
+        Elements goLightFlight = mainDataRow.select("#reco_0_1" + flightType[0]);
+        Elements sasGoFlight = mainDataRow.select("#reco_0_1" + flightType[1]);
+        Elements plusSaverFlight = mainDataRow.select("#reco_0_1" + flightType[2]);
+        Elements plusFlight = mainDataRow.select("#reco_0_1" + flightType[3]);
+        // replaceAll bullshit for generating numerical values from string
+//        System.out.println(
+//                goLightFlight.text().replaceAll("\\s","").replaceAll("€","").replaceAll("[^\\\\.0123456789]",".")
+//                + ", " + sasGoFlight.text().replaceAll("\\s","").replaceAll("€","").replaceAll("[^\\\\.0123456789]",".")
+//                + ", " + plusSaverFlight.text().replaceAll("\\s","").replaceAll("€","").replaceAll("[^\\\\.0123456789]",".")
+//                + ", " + plusFlight.text().replaceAll("\\s","").replaceAll("€","").replaceAll("[^\\\\.0123456789]",".")
+//        );
+        // get departure and arrival times
+        Elements depTime = mainDataRow.select("td.time > span:nth-child(1)");
+        Elements arrTime = mainDataRow.select("td.time > span:nth-child(3)");
 
-        for (NameValuePair pair : responseHeaders) {
-            System.out.println(pair.getName() + "->" + pair.getValue());
-        }
+//        System.out.println(depTime.text() + " - " + arrTime.text());
+
+        Elements depAir = mainDataRow.select("td.airport.last > acronym:nth-child(1) > span");
+        Elements arrAir = mainDataRow.select("td.airport.last > acronym:nth-child(3) > span");
+        System.out.println(depAir.text() + "-" + arrAir.text());
+
+        // now lets do the second row
+        Elements dont = detailsRow.select("table > tbody > tr:nth-child(2) > td.route.last");
+        // if dont2 not empty && !contains.text("Oslo") -> dont include
+        Elements dont2 = detailsRow.select("table > tbody > tr:nth-child(5) > td.route.last");
+//        System.out.println(dont.text());
+//        System.out.println(dont2.text());
+        Elements departureAirport = detailsRow.select("table > tbody > tr:nth-child(2) > td.route.last > span:nth-child(1) > span.location");
+        // if connection exists
+        // TODO think of a flow controll for connection airport. If the flight is direct, there is no connection airport.
+        //TODO also if connection airport is not Oslo -> discard.
+        Elements arrivalAirport = detailsRow.select("table > tbody > tr:nth-child(5) > td.route.last > span:nth-child(3) > span.location");
+        Elements connectionAirport = detailsRow.select("table > tbody > tr:nth-child(2) > td.route.last > span:nth-child(3) > span");
+
+//        System.out.println(departureAirport.text());
+//        System.out.println(connectionAirport.text());
+//        System.out.println(arrivalAirport.text());
+
+        //map all the shit
+        String[] flightPrices = {
+                goLightFlight.text().replaceAll("\\s", ""),
+                sasGoFlight.text().replaceAll("\\s", ""),
+                plusSaverFlight.text().replaceAll("\\s", ""),
+                plusFlight.text().replaceAll("\\s", "")
+        };
+        String depT = depTime.text();
+        String arrT = arrTime.text();
+        String dAir = depAir.text();
+        String aAir = arrAir.text();
+        String departAirport = departureAirport.text().replaceAll("\\s", "");
+        String arrivAirport = arrivalAirport.text().replaceAll("\\s", "");
+        String connAirport = connectionAirport.text();
+
+        return new FlightData(flightPrices, departAirport, arrivAirport, connAirport, depT, arrT);
+
+
     }
 
-    public HtmlPage submitFinalForm(HtmlPage page) {
-        HtmlForm form = page.getFormByName("form1");
-        page = (HtmlPage) form.fireEvent(Event.TYPE_SUBMIT).getNewPage();
-        return page;
+    public String[] generateFlightClassNameList() {
+        String goLight = "_ECONBG";
+        String sasGo = "_ECOA";
+        String plusSaver = "_PREMN";
+        String plus = "_PREMB";
+        return new String[]{goLight, sasGo, plusSaver, plus};
+
     }
 
-    public HtmlPage addFormSubmitButtonAndClick(HtmlPage page) throws IOException {
-        // create a submit button - it doesn't work with 'input'
-        DomElement button = page.createElement("button");
-        button.setAttribute("type", "submit");
-
-// append the button to the form
-        HtmlElement form = page.getForms().get(0);
-        form.appendChild(button);
-
-// submit the form
-        page = button.click();
-        return page;
+    public void generateIds() {
+        String idLine = "idLine_0_";
     }
 
-    public void generatePostRequest(HtmlPage page) throws IOException {
-
-        String baseURL = "book.flysas.com";
-        String paramValue = " /pl/SASC/wds/Override.action?SO_SITE_EXT_PSPURL=https://classic.sas.dk/SASCredits/SASCreditsPaymentMaster.aspx&SO_SITE_TP_TPC_POST_EOT_WT=50000&SO_SITE_USE_ACK_URL_SERVICE=TRUE&WDS_URL_JSON_POINTS=ebwsprod.flysas.com%2FEAJI%2FEAJIService.aspx&SO_SITE_EBMS_API_SERVERURL=https%3A%2F%2F1aebwsprod.flysas.com%2FEBMSPointsInternal%2FEBMSPoints.asmx&WDS_SERVICING_FLOW_TE_SEATMAP=TRUE&WDS_SERVICING_FLOW_TE_XBAG=TRUE&WDS_SERVICING_FLOW_TE_MEAL=TRUE";
-        String requestURL = "https://book.flysas.com/pl/SASC/wds/Override.action?SO_SITE_EXT_PSPURL=https://classic.sas.dk/SASCredits/SASCreditsPaymentMaster.aspx&SO_SITE_TP_TPC_POST_EOT_WT=50000&SO_SITE_USE_ACK_URL_SERVICE=TRUE&WDS_URL_JSON_POINTS=ebwsprod.flysas.com%2FEAJI%2FEAJIService.aspx&SO_SITE_EBMS_API_SERVERURL=https%3A%2F%2F1aebwsprod.flysas.com%2FEBMSPointsInternal%2FEBMSPoints.asmx&WDS_SERVICING_FLOW_TE_SEATMAP=TRUE&WDS_SERVICING_FLOW_TE_XBAG=TRUE&WDS_SERVICING_FLOW_TE_MEAL=TRUE";
-        URL url = new URL(requestURL);
-        WebRequest requestSettings = new WebRequest(url, HttpMethod.POST);
-
-        requestSettings.setAdditionalHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
-        requestSettings.setAdditionalHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
-        requestSettings.setAdditionalHeader("Referer", "https://www.flysas.com/en/lt/");
-        requestSettings.setAdditionalHeader("Accept-Language", "en,lt;q=0.9,en-US;q=0.8,ru;q=0.7,pl;q=0.6,es;q=0.5");
-        requestSettings.setAdditionalHeader("Accept-Encoding", "gzip, deflate, br");
-        requestSettings.setAdditionalHeader("Cookie", "D_SID=84.240.13.12:qAgZT1vYP/iQhPH8NR6BWE7mxdUhnkzreqKNEvlcwHg; D_IID=05456754-5E10-3B7B-B884-98B928D5600B; D_UID=C84EFE24-C4B0-3D97-88E3-482C519C517A; D_ZID=9279EBCE-1A4B-3DF3-8F7D-C27D49600C7C; D_ZUID=0962D830-CCE5-3376-8E5D-581DA19E605E; D_HID=09E35B06-3130-30D5-94A8-7E9083D21693; JSESSIONID_SASC=VIlte_id8Lv5K3s3Ing53DKwI7NxwjY9zhGoJHoWuq9Y7ZxMg1I3!863071827!-339112673");
-        requestSettings.setAdditionalHeader("Cache-Control", "max-age=0");
-        requestSettings.setAdditionalHeader("Origin", "https://www.flysas.com");
-
-        requestSettings.setRequestBody("/pl/SASC/wds/Override.action?SO_SITE_EXT_PSPURL=https://classic.sas.dk/SASCredits/SASCreditsPaymentMaster.aspx&SO_SITE_TP_TPC_POST_EOT_WT=50000&SO_SITE_USE_ACK_URL_SERVICE=TRUE&WDS_URL_JSON_POINTS=ebwsprod.flysas.com%2FEAJI%2FEAJIService.aspx&SO_SITE_EBMS_API_SERVERURL=https%3A%2F%2F1aebwsprod.flysas.com%2FEBMSPointsInternal%2FEBMSPoints.asmx&WDS_SERVICING_FLOW_TE_SEATMAP=TRUE&WDS_SERVICING_FLOW_TE_XBAG=TRUE&WDS_SERVICING_FLOW_TE_MEAL=TRUE");
-
-        page = webClient.getPage(requestSettings);
-        System.out.println(((HtmlPage) page).asXml());
-    }
-
+    //TODO
+    //Access table
+    //Get rows
 
 }
-
-
