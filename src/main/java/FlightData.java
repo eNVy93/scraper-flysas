@@ -2,34 +2,24 @@ import java.util.Arrays;
 
 public class FlightData {
 
-    //only direct or connection ant Oslo
     private String departureAirport;
     private String arrivalAirport;
     private String connectionAirport;
     private String departureTime;
     private String arrivalTime;
     private String[] flightPrices;
-//    private String cheapestPrice;
-//    private String taxes;
-//
-//    public FlightData(String departureAirport, String arrivalAirport, String connectionAirport, String departureTime, String arrivalTime, String cheapestPrice, String taxes) {
-//        this.departureAirport = departureAirport;
-//        this.arrivalAirport = arrivalAirport;
-//        this.connectionAirport = connectionAirport;
-//        this.departureTime = departureTime;
-//        this.arrivalTime = arrivalTime;
-//        this.cheapestPrice = cheapestPrice;
-//        this.taxes = taxes;
-//    }
+    private String cheapestPrice;
+    private String taxes;
 
-
-    public FlightData(String[] flightPrices,String departureAirport, String arrivalAirport, String connectionAirport, String departureTime, String arrivalTime) {
+    FlightData(String taxes, String cheapestPrice, String[] flightPrices, String departureAirport, String arrivalAirport, String connectionAirport, String departureTime, String arrivalTime) {
         this.flightPrices = flightPrices;
         this.departureAirport = departureAirport;
         this.arrivalAirport = arrivalAirport;
         this.connectionAirport = connectionAirport;
         this.departureTime = departureTime;
         this.arrivalTime = arrivalTime;
+        this.cheapestPrice = cheapestPrice;
+        this.taxes = taxes;
     }
 
     public String getDepartureAirport() {
@@ -72,6 +62,22 @@ public class FlightData {
         this.arrivalTime = arrivalTime;
     }
 
+    public String[] getFlightPrices() {
+        return flightPrices;
+    }
+
+    public void setFlightPrices(String[] flightPrices) {
+        this.flightPrices = flightPrices;
+    }
+
+    public String getCheapestPrice() {
+        return cheapestPrice;
+    }
+
+    public void setCheapestPrice(String cheapestPrice) {
+        this.cheapestPrice = cheapestPrice;
+    }
+
     @Override
     public String toString() {
         return "FlightData{" +
@@ -81,22 +87,16 @@ public class FlightData {
                 ",\n departureTime='" + departureTime + '\'' +
                 ",\n arrivalTime='" + arrivalTime + '\'' +
                 ",\n flightPrices=" + Arrays.toString(flightPrices) +
-                '}';
+                ",\n cheapestPrice='" + cheapestPrice + '\'' +
+                ",\n taxes='" + taxes + '\'' +
+                "\n}";
     }
 
-    //    public String getCheapestPrice() {
-//        return cheapestPrice;
-//    }
-//
-//    public void setCheapestPrice(String cheapestPrice) {
-//        this.cheapestPrice = cheapestPrice;
-//    }
-//
-//    public String getTaxes() {
-//        return taxes;
-//    }
-//
-//    public void setTaxes(String taxes) {
-//        this.taxes = taxes;
-//    }
+    public String getTaxes() {
+        return taxes;
+    }
+
+    public void setTaxes(String taxes) {
+        this.taxes = taxes;
+    }
 }

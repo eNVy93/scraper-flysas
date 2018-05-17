@@ -12,22 +12,20 @@ import java.util.List;
 
 public class Main {
 
+
     public static void main(String[] args) throws IOException, InterruptedException {
-        String departureAirport = "ARN";
-        String arrivalAirport = "LHR";
-        String homeAdress = "https://www.flysas.com/en/lt/";
+        final int DEPARTURE_TABLE = 0;
+        final int ARRIVAL_TABLE = 1;
+
+        String homeAddress = "https://www.flysas.com/en/lt/";
         Utilities utils = new Utilities();
         Scraper scraper = new Scraper();
         WebClient webClient = utils.setUpWebClient();
-        HtmlPage page = webClient.getPage(homeAdress);
-        HtmlPage afterClick = utils.clickSearchButton(page);
+        HtmlPage page = webClient.getPage(homeAddress);
         HtmlPage modifiedPage = utils.setInterestPointValues(page);
-//        scraper.getPageInfo(modifiedPage);
         HtmlPage pageAfterFormSubmit = utils.submitForm(modifiedPage);
 
         HtmlPage pleaseWaitPage = utils.clickSearchButton(pageAfterFormSubmit); // WOKRS !!!!!!!!!!!!!!!!
-
-        List<NameValuePair> responseHeaders = pleaseWaitPage.getWebResponse().getResponseHeaders();
 
 
         webClient.setAjaxController(new NicelyResynchronizingAjaxController());
@@ -36,29 +34,29 @@ public class Main {
 
         List<HtmlPage> windowList = utils.savePagesFromWindows(webClient);
 
-        //Save files to the machine
-//        for(HtmlPage p: windowList){
-//            scraper.saveHtmlFile(p);
-//        }
 
         //THIS IS THE RESULT I NEED !!!!!!!!!!
         HtmlPage targetPage = windowList.get(0);
-        Document doc =utils.parsePageToDocument(targetPage);
+        Document doc = utils.parsePageToDocument(targetPage);
         Elements departureTable = scraper.getDepartureTable(doc);
-//        scraper.getData(departureTable);
-        List<FlightData> flightDataList = scraper.getFlightDataRefactored(departureTable);
+        Elements arrivalTable = scraper.getArrivalTable(doc);
+        String taxes = scraper.getTaxes(doc);
+        List<FlightData> departureFlightList = scraper.getFlightDataRefactored(departureTable, DEPARTURE_TABLE, taxes);
 
-        for(FlightData flight: flightDataList){
+        for (FlightData flight : departureFlightList) {
+            System.out.println("DEPARTURE FLIGHT");
+            System.out.println("_-_-_-_-_-_-_-_-");
             System.out.println(flight);
         }
 
-//        System.out.println(targetPage.as
-// Xml());
-//
-//        System.out.println(pleaseWaitPage.getTitleText());
-
+        List<FlightData> arrivalFlightList = scraper.getFlightDataRefactored(arrivalTable, ARRIVAL_TABLE, taxes);
+        for (FlightData flight : arrivalFlightList) {
+            System.out.println("ARRIVAL FLIGHT");
+            System.out.println("_-_-_-_-_-_-_-");
+            System.out.println(flight);
+        }
+        System.out.println();
 
 
     }
-
 }
