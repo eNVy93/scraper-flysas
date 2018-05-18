@@ -86,9 +86,9 @@ public class FlightData {
                 ",\n connectionAirport='" + connectionAirport + '\'' +
                 ",\n departureTime='" + departureTime + '\'' +
                 ",\n arrivalTime='" + arrivalTime + '\'' +
-                ",\n flightPrices=" + Arrays.toString(flightPrices) +
-                ",\n cheapestPrice='" + cheapestPrice + '\'' +
-                ",\n taxes='" + taxes + '\'' +
+                ",\n flightPrices= €" + Arrays.toString(flightPrices) +
+                ",\n cheapestPrice=' €" + cheapestPrice + '\'' +
+                ",\n taxes=' €" + taxes + '\'' +
                 "\n}";
     }
 

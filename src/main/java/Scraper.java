@@ -18,23 +18,38 @@ public class Scraper {
 
     }
 
+    private String[] generateFlightClassNameList() {
+        String goLight = "_ECONBG";
+        String sasGo = "_ECOA";
+        String plusSaver = "_PREMN";
+        String plus = "_PREMB";
+        return new String[]{goLight, sasGo, plusSaver, plus};
 
-    public List<FlightData> getFlightDataRefactored(Elements elements, int tableType,String taxes) {
+    }
+
+    public List<FlightData> getFlightData(Elements elements, int tableType, String taxes) {
         List<FlightData> flightList = new ArrayList<FlightData>();
         Elements rows = elements.select("tr");
+        String separator = "_";
+        String dataRowSelector = "#idLine_";
+        String detailRowSelector = "#toggleId_";
+        String priceSelector = "#reco_";
         for (int i = 0; i < 18; i++) {
-            Elements mainDataRow = rows.select("#idLine_" + tableType + "_" + i);
-            Elements detailsRow = elements.select("#toggleId_" + tableType + "_" + i);
+            Elements mainDataRow = rows.select(dataRowSelector + tableType + separator + i);
+            Elements detailsRow = elements.select(detailRowSelector + tableType + separator + i);
 
             String[] flightType = generateFlightClassNameList();
-
-            String goLightFlight = mainDataRow.select("#reco_" + tableType + "_" + i + flightType[0]).text();
+            // Select prices and replace symbols to get a (numeric-like) String value. (replace € and 'whitespace' with nothing and replace comma with dot).
+            String goLightFlight = mainDataRow.select(priceSelector + tableType + separator + i + flightType[0]).text();
             goLightFlight = goLightFlight.replaceAll("€", "").replaceAll("[^\\\\.0123456789^\\s^-]", ".").replaceAll("\\s", "");
-            String sasGoFlight = mainDataRow.select("#reco_" + tableType + "_" + i + flightType[1]).text();
+
+            String sasGoFlight = mainDataRow.select(priceSelector + tableType + separator + i + flightType[1]).text();
             sasGoFlight = sasGoFlight.replaceAll("€", "").replaceAll("[^\\\\.0123456789^\\s^-]", ".").replaceAll("\\s", "");
-            String plusSaverFlight = mainDataRow.select("#reco_" + tableType + "_" + i + flightType[2]).text();
+
+            String plusSaverFlight = mainDataRow.select(priceSelector + tableType + separator + i + flightType[2]).text();
             plusSaverFlight = plusSaverFlight.replaceAll("€", "").replaceAll("[^\\\\.0123456789^\\s^-]", ".").replaceAll("\\s", "");
-            String plusFlight = mainDataRow.select("#reco_" + tableType + "_" + i + flightType[3]).text();
+
+            String plusFlight = mainDataRow.select(priceSelector + tableType + separator + i + flightType[3]).text();
             plusFlight = plusFlight.replaceAll("€", "").replaceAll("[^\\\\.0123456789^\\s^-]", ".").replaceAll("\\s", "");
 
             String depTime = mainDataRow.select("td.time > span:nth-child(1)").text();
@@ -46,28 +61,22 @@ public class Scraper {
             String departureAirport = detailsRow.select("table > tbody > tr:nth-child(2) > td.route.last > span:nth-child(1) > span.location").text();
             String connectionAirport = detailsRow.select("table > tbody > tr:nth-child(2) > td.route.last > span:nth-child(3) > span.location").text();
             String arrivalAirport = detailsRow.select("table > tbody > tr:nth-child(5) > td.route.last > span:nth-child(3) > span.location").text();
-            // table 1
-            // #toggleId_0_15 > table > tbody > tr:nth-child(2) > td.route.last > span:nth-child(1) > span.location ----- departure     STOCKHOLM
-            // #toggleId_0_15 > table > tbody > tr:nth-child(2) > td.route.last > span:nth-child(3) > span    ----- connection          OSLO
-            // #toggleId_0_15 > table > tbody > tr:nth-child(5) > td.route.last > span:nth-child(3) > span.location ----- arrival       LONDON
-            // table 2
-            // #toggleId_1_11 > table > tbody > tr:nth-child(2) > td.route.last > span:nth-child(1) > span.location ----- departure     LONDON
-            // #toggleId_1_11 > table > tbody > tr:nth-child(2) > td.route.last > span:nth-child(3) > span.location ----- connection    SOME OTHER
-            // #toggleId_1_11 > table > tbody > tr:nth-child(5) > td.route.last > span:nth-child(3) > span.location ----- arrival       STOCKHOLM
+
+            //Fixes problem where the connection airport becomes arrival airport.
             if (connectionAirport.contains("London") || connectionAirport.contains("Stockholm")) {
                 arrivalAirport = connectionAirport;
                 connectionAirport = "";
             }
             String[] flightPrices = {goLightFlight, sasGoFlight, plusSaverFlight, plusFlight};
             String cheapestPrice;
-
-            //TODO find cheapest flight
+            // Either goLightFlight is cheapest. If not present - the cheapest one will be Sas Go.
             if (flightPrices[0].length() == 1) {
                 cheapestPrice = flightPrices[1];
             } else {
                 cheapestPrice = flightPrices[0];
             }
 
+            // If the flight is direct
             if (connectionAirport.length() != 0 && !connectionAirport.contains("Oslo")) {
                 //do nothing
             } else {
@@ -79,19 +88,9 @@ public class Scraper {
 
 
     }
-    public String getTaxes(Document doc){
-        String taxes = doc.select("#taxesAndFees").text();
-        return taxes;
-    }
 
-
-    public String[] generateFlightClassNameList() {
-        String goLight = "_ECONBG";
-        String sasGo = "_ECOA";
-        String plusSaver = "_PREMN";
-        String plus = "_PREMB";
-        return new String[]{goLight, sasGo, plusSaver, plus};
-
+    public String getTaxes(Document doc) {
+        return doc.select("#taxesAndFees").text();
     }
 
 
